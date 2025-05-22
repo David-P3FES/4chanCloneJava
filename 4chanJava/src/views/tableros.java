@@ -4,22 +4,74 @@
  */
 package views;
 
-import javax.swing.JLabel;
+import dao.BoardDAO;
+import models.Board;
 
+import javax.swing.JLabel;
+import java.awt.Cursor;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import util.DatabaseManager; // Import the DatabaseManager
 /**
  *
  * @author lich2
  */
 public class tableros extends javax.swing.JFrame {
+    private BoardDAO boardDAO; // Add an instance of BoardDAO
 
-    /**
-     * Creates new form tableros
-     */
     public tableros() {
+        // Initialize database first
+        DatabaseManager.initializeDatabase();
+        boardDAO = new BoardDAO(); // Initialize DAO
         initComponents();
         loadBoards();
     }
 
+    private void loadBoards() {
+        board_table.removeAll();
+        board_table.setLayout(new java.awt.GridLayout(4, 7)); // Ensure layout is set
+
+        List<Board> boardsList = boardDAO.getAllBoards(); // Get boards from DB
+
+        if (boardsList.isEmpty()) {
+            JLabel noBoardsLabel = new JLabel("No hay tableros disponibles.");
+            noBoardsLabel.setFont(new java.awt.Font("Segoe UI", 0, 16));
+            board_table.add(noBoardsLabel);
+        } else {
+            for (Board board : boardsList) {
+                JLabel boardLabel = new JLabel(board.getFullName());
+                boardLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14));
+                boardLabel.setForeground(new java.awt.Color(0, 0, 200)); // Darker blue for links
+                boardLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                boardLabel.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent evt) {
+                        boardLabel.setText("<html><u>" + board.getFullName() + "</u></html>");
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent evt) {
+                        boardLabel.setText(board.getFullName());
+                    }
+
+                    @Override
+                    public void mouseClicked(MouseEvent evt) {
+                        System.out.println("Clicked on board: " + board.getFullName() + " (ID: " + board.getId() + ")");
+                        // Open the specific BoardView for this board
+                        BoardView boardView = new BoardView(board);
+                        boardView.setVisible(true);
+                        // Optional: dispose current window if you only want one active
+                        // dispose();
+                    }
+                });
+                board_table.add(boardLabel);
+            }
+        }
+        board_table.revalidate();
+        board_table.repaint();
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -229,40 +281,6 @@ public class tableros extends javax.swing.JFrame {
                 new tableros().setVisible(true);
             }
         });
-    }
-
-    // En tu constructor o en un método de inicialización
-    private void loadBoards() {
-        
-        String[] boardNames = {"/g/ - Technology", "/b/ - Random", "/v/ - Video Games", "/a/ - Anime & Manga", "/pol/ - Politically Incorrect", /* ... */};
-
-        // Limpia el panel antes de agregar nuevos tableros (si se recargan)
-        board_table.removeAll();
-
-        for (String boardName : boardNames) {
-            JLabel boardLabel = new JLabel(boardName);
-            boardLabel.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // Tamaño de fuente más pequeño
-            boardLabel.setForeground(new java.awt.Color(0, 0, 200)); // Un azul más oscuro para los enlaces
-
-            // Simula el subrayado al pasar el ratón (opcional)
-            boardLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    boardLabel.setText("<html><u>" + boardName + "</u></html>");
-                }
-
-                public void mouseExited(java.awt.event.MouseEvent evt) {
-                    boardLabel.setText(boardName);
-                }
-
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    System.out.println("Clicked on board: " + boardName);
-                    // Aquí podrías abrir una nueva ventana o panel para el tablero
-                }
-            });
-            board_table.add(boardLabel);
-        }
-        board_table.revalidate(); // Asegura que los nuevos componentes se muestren
-        board_table.repaint();    // Repinta el panel
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
